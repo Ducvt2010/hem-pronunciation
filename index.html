@@ -1,0 +1,39 @@
+<table border="1" style="border-collapse:collapse;width:80%;margin:auto;text-align:center;font-size:20px;">
+<tr style="background-color:#b0e57c;">
+  <th>Tên nguyên tố</th><th>KHHH</th><th>Phiên âm</th><th>Nghe mẫu</th><th>Đọc lại</th><th>Điểm</th>
+</tr>
+<tr>
+  <td>Sodium</td><td>Na</td><td>/ˈsəʊ.di.əm/</td>
+  <td><button onclick="speak('Sodium')">🔊</button></td>
+  <td><button onclick="check('Sodium',0)">🎙️</button></td>
+  <td id="score0">-</td>
+</tr>
+<tr>
+  <td>Calcium</td><td>Ca</td><td>/ˈkæl.si.əm/</td>
+  <td><button onclick="speak('Calcium')">🔊</button></td>
+  <td><button onclick="check('Calcium',1)">🎙️</button></td>
+  <td id="score1">-</td>
+</tr>
+</table>
+
+<script>
+function speak(text){
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.lang = "en-US";
+  speechSynthesis.speak(utter);
+}
+
+function check(expected, id){
+  const rec = new webkitSpeechRecognition();
+  rec.lang = "en-US";
+  rec.onresult = (e)=>{
+    const said = e.results[0][0].transcript.toLowerCase();
+    let score = 0;
+    if (said === expected.toLowerCase()) score = 100;
+    else if (said.includes(expected.toLowerCase()) || expected.toLowerCase().includes(said)) score = 80;
+    else score = 50;
+    document.getElementById("score"+id).innerText = score + "%";
+  };
+  rec.start();
+}
+</script>
