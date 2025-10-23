@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>Chấm điểm phát âm - Khí hiếm</title>
+<style>
+  body {
+    background-color: #a5e887; /* nền xanh giống mẫu */
+    font-family: Arial, sans-serif;
+    text-align: center;
+  }
+  h2 {
+    color: red;
+    font-weight: bold;
+  }
+  table {
+    border-collapse: collapse;
+    width: 85%;
+    margin: auto;
+    background-color: #f4ffdd; /* bảng sáng nổi bật trên nền xanh */
+    font-size: 20px;
+    box-shadow: 0 0 12px rgba(0,0,0,0.15);
+    border-radius: 10px;
+  }
+  th, td {
+    border: 2px solid #94cc6b;
+    padding: 10px;
+    text-align: center;
+  }
+  th {
+    background-color: #c9f9a5; /* hàng tiêu đề sáng xanh */
+  }
+  img {
+    width: 100px;
+    border-radius: 10px;
+  }
+  button {
+    font-size: 18px;
+    padding: 6px 12px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    background-color: #eaffc1;
+    transition: background-color 0.2s;
+  }
+  button:hover {
+    background-color: #d6ffad;
+  }
+  .ipa {
+    color: red;
+    font-weight: bold;
+  }
+</style>
+</head>
+
+<body>
+<h2>5.1. KHÍ HIẾM</h2>
+
+<table>
+  <tr>
+    <th>Tên nguyên tố</th>
+    <th>KHHH</th>
+    <th>Hình ảnh</th>
+    <th>Phiên âm</th>
+    <th>Nghe mẫu</th>
+    <th>Đọc lại</th>
+    <th>Điểm</th>
+  </tr>
+
+  <tr>
+    <td>Helium</td>
+    <td>He</td>
+    <td><img src="Helium.png" alt="Helium"></td>
+    <td class="ipa">/ˈhiː.li.əm/</td>
+    <td><button onclick="speak('Helium')">🔊</button></td>
+    <td><button onclick="check('Helium',0)">🎙️</button></td>
+    <td id="score0">-</td>
+  </tr>
+
+  <tr>
+    <td>Neon</td>
+    <td>Ne</td>
+    <td><img src="Neon.png" alt="Neon"></td>
+    <td class="ipa">/ˈniː.ɒn/</td>
+    <td><button onclick="speak('Neon')">🔊</button></td>
+    <td><button onclick="check('Neon',1)">🎙️</button></td>
+    <td id="score1">-</td>
+  </tr>
+
+  <tr>
+    <td>Argon</td>
+    <td>Ar</td>
+    <td><img src="Argon.png" alt="Argon"></td>
+    <td class="ipa">/ˈɑː.ɡɒn/</td>
+    <td><button onclick="speak('Argon')">🔊</button></td>
+    <td><button onclick="check('Argon',2)">🎙️</button></td>
+    <td id="score2">-</td>
+  </tr>
+
+  <tr>
+    <td>Krypton</td>
+    <td>Kr</td>
+    <td><img src="Krypton.png" alt="Krypton"></td>
+    <td class="ipa">/ˈkrɪp.tɒn/</td>
+    <td><button onclick="speak('Krypton')">🔊</button></td>
+    <td><button onclick="check('Krypton',3)">🎙️</button></td>
+    <td id="score3">-</td>
+  </tr>
+</table>
+
+<script>
+function speak(text){
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.lang = "en-US";
+  speechSynthesis.speak(utter);
+}
+
+function check(expected, id){
+  const rec = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+  rec.lang = "en-US";
+  rec.onresult = (e)=>{
+    const said = e.results[0][0].transcript.toLowerCase().trim();
+    let score = 0;
+    if (said === expected.toLowerCase()) score = 100;
+    else if (said.includes(expected.toLowerCase()) || expected.toLowerCase().includes(said)) score = 80;
+    else score = 50;
+    document.getElementById("score"+id).innerText = score + "%";
+  };
+  rec.start();
+}
+</script>
+</body>
+</html>
