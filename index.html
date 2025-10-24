@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>Chấm điểm phát âm - Khí hiếm (sửa)</title>
+<style>
+  body {
+    background-color: #a5e887; /* nền xanh */
+    font-family: Arial, sans-serif;
+    text-align: center;
+  }
+  h2 {
+    color: red;
+    font-weight: bold;
+  }
+  table {
+    border-collapse: collapse;
+    width: 85%;
+    margin: auto;
+    background-color: #f4ffdd; /* bảng xanh sáng*/
+    font-size: 20px;
+    box-shadow: 0 0 12px rgba(0,0,0,0.15);
+    border-radius: 10px;
+  }
+  th, td {
+    border: 2px solid #94cc6b;
+    padding: 10px;
+    text-align: center;
+  }
+  th {
+    background-color: #c9f9a5; /* hàng tiêu đề sáng xanh */
+  }
+  video {
+    width: 100px;
+    border-radius: 10px;
+  }
+  button {
+    font-size: 18px;
+    padding: 6px 12px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    background-color: #eaffc1;
+    transition: background-color 0.2s;
+  }
+  button:hover {
+    background-color: #d6ffad;
+  }
+  .ipa {
+    color: red;
+    font-weight: bold;
+  }
+</style>
+</head>
+
+<body>
+<h2>5.1. KHÍ HIẾM</h2>
+
+<table>
+  <tr>
+    <th>Tên nguyên tố</th>
+    <th>KHHH</th>
+    <th>Hình ảnh</th>
+    <th>Phiên âm</th>
+    <th>Nghe mẫu</th>
+    <th>Đọc lại</th>
+    <th>Điểm</th>
+  </tr>
+
+  <tr>
+    <td>Helium</td>
+    <td>He</td>
+    <td><img src="videos/Helium.gif" alt="Helium" width="150">
+    <td class="ipa">/ˈhiː.li.əm/</td>
+    <td><button onclick="speak('Helium')">🔊</button></td>
+    <td><button onclick="check('Helium',0)">🎙️</button></td>
+    <td id="score0">-</td>
+  </tr>
+
+  <tr>
+    <td>Neon</td>
+    <td>Ne</td>
+    <td><img src="videos/Neon.gif" alt="Neon" width="150">
+    <td class="ipa">/ˈniː.ɒn/</td>
+    <td><button onclick="speak('Neon')">🔊</button></td>
+    <td><button onclick="check('Neon',1)">🎙️</button></td>
+    <td id="score1">-</td>
+  </tr>
+
+  <tr>
+    <td>Argon</td>
+    <td>Ar</td>
+    <td><img src="videos/Argon.gif" alt="Argon" width="150">
+    <td class="ipa">/ˈɑː.ɡɒn/</td>
+    <td><button onclick="speak('Argon')">🔊</button></td>
+    <td><button onclick="check('Argon',2)">🎙️</button></td>
+    <td id="score2">-</td>
+  </tr>
+
+  <tr>
+    <td>Krypton</td>
+    <td>Kr</td>
+    <td><img src="videos/Krypton.gif" alt="Krypton" width="150">
+    <td class="ipa">/ˈkrɪp.tɒn/</td>
+    <td><button onclick="speak('Krypton')">🔊</button></td>
+    <td><button onclick="check('Krypton',3)">🎙️</button></td>
+    <td id="score3">-</td>
+  </tr>
+
+</table>
+
+<script>
+// speak unchanged
+function speak(text){
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.lang = "en-US";
+  speechSynthesis.speak(utter);
+}
+
+/* Levenshtein distance */
+function levenshtein(a, b) {
+  a = a || "";
+  b = b || "";
+  const al = a.length, bl = b.length;
+  if (al === 0) return bl;
+  if (bl === 0) return al;
+  const matrix = Array.from({length: al + 1}, () => new Array(bl + 1).fill(0));
+  for (let i = 0; i <= al; i++) matrix[i][0] = i;
+  for (let j = 0; j <= bl; j++) matrix[0][j] = j;
+  for (let i = 1; i <= al; i++) {
+    for (let j = 1; j <= bl; j++) {
+      const cost = a[i-1] === b[j-1] ? 0 : 1;
+      matrix[i][j] = Math.min(
+        matrix[i-1][j] + 1,    // deletion
+        matrix[i][j-1] + 1,    // insertion
+        matrix[i-1][j-1] + cost // substitution
+      );
+    }
+  }
+  return matrix[al][bl];
+}
+
+/* Main check function (stricter) */
+function check(expected, id){
+  const rec = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+  rec.lang = "en-US";
+  rec.interimResults = false;
+  rec.maxAlternatives = 1;
+
+  const cell = document.getElementById("score"+id);
+  // timeout -> 0%
+  let timeout = setTimeout(() => {
+    try { rec.stop(); } catch(e){/*ignore*/ }
+    cell.innerText = "0%";
+    cell.style.color = "red";
+  }, 7000);
+
+  rec.onresult = (e) => {
+    clearTimeout(timeout);
+    const alt = e.results[0][0];
+    const saidRaw = alt.transcript || "";
+    const confidence = (typeof alt.confidence === "number") ? alt.confidence : null;
+    const said = saidRaw.toLowerCase().trim();
+    const expectedText = expected.toLowerCase().trim();
+
+    // quick guards
+    if (!said || said.length === 0) {
+      cell.innerText = "0%";
+      cell.style.color = "red";
+      return;
+    }
+    // if recognition confidence is very low, consider 0%
+    if (confidence !== null && confidence < 0.35) {
+      cell.innerText = "0%";
+      cell.style.color = "red";
+      return;
+    }
+
+    // normalize: keep only letters a-z and spaces
+    const normalize = s => s.replace(/[^a-z\s]/g, "").replace(/\s+/g, " ").trim();
+    const nSaid = normalize(said);
+    const nExpected = normalize(expectedText);
+
+    // If after normalization one is empty, 0
+    if (!nSaid || !nExpected) {
+      cell.innerText = "0%";
+      cell.style.color = "red";
+      return;
+    }
+
+    // exact match
+    if (nSaid === nExpected) {
+      cell.innerText = "100%";
+      cell.style.color = "green";
+      return;
+    }
+
+    // compute similarity via Levenshtein
+    const dist = levenshtein(nSaid, nExpected);
+    const maxLen = Math.max(nSaid.length, nExpected.length);
+    const similarity = maxLen === 0 ? 0 : (1 - dist / maxLen); // 0..1
+
+    // thresholds
+    let score;
+    if (similarity >= 0.95) score = 100;
+    else if (similarity >= 0.75) score = 80;
+    else if (similarity >= 0.5) score = 50;
+    else if (similarity >= 0.25) score = 25;
+    else score = 0;
+
+    // additional guard: if user said many filler words and transcript unusually long compared to expected
+    if (nSaid.split(" ").length >= 4 && nExpected.split(" ").length <= 2 && similarity < 0.5) {
+      score = 0;
+    }
+
+    cell.innerText = score + "%";
+    if (score === 100) cell.style.color = "green";
+    else if (score >= 80) cell.style.color = "orange";
+    else if (score >= 50) cell.style.color = "goldenrod";
+    else cell.style.color = "red";
+  };
+
+  rec.onerror = (err) => {
+    clearTimeout(timeout);
+    cell.innerText = "0%";
+    cell.style.color = "red";
+  };
+
+  try {
+    rec.start();
+  } catch(e){
+    // some browsers throw if start called too soon
+    cell.innerText = "0%";
+    cell.style.color = "red";
+  }
+}
+</script>
+</body>
+</html>
